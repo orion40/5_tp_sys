@@ -1,7 +1,8 @@
 CC=gcc
-FLAGS=-O2 -ggdb -std=c99
-IN=test_lecteurs_redacteurs.c
+FLAGS=-ggdb -O2
+LIBS=-lpthread
+IN=test_lecteurs_redacteurs.c lecteur_redacteur.c
 OUT=test
 
 all:
-	$(CC) $(FLAGS) $(IN) -o $(OUT)
+	$(CC) $(FLAGS) $(LIBS) $(IN) -o $(OUT)
