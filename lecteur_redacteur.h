@@ -1,8 +1,12 @@
 #include <pthread.h>
 
 typedef struct {
-    pthread_mutex_t mutex_lecture;
-    pthread_mutex_t mutex_ecriture;
+    int nb_redacteur_actif;
+    int nb_lecteur_actif;
+    int nb_lecteur_attente;
+    pthread_mutex_t mutex;
+    pthread_cond_t notif_ecrivain;
+    pthread_cond_t notif_lecteur;
 } lecteur_redacteur_t;
 
 void initialiser_lecteur_redacteur(lecteur_redacteur_t *);
