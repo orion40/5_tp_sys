@@ -1,4 +1,5 @@
 #include "lecteur_redacteur.h"
+#include <stdio.h>
 
 void initialiser_lecteur_redacteur(lecteur_redacteur_t * lr){
     lr->nb_redacteur_actif = 0;
@@ -36,7 +37,7 @@ void fin_lecture(lecteur_redacteur_t * lr){
     lr->nb_lecteur_actif--;
 
     if (lr->nb_lecteur_actif == 0){
-        pthread_cond_wait(&lr->notif_ecrivain, &lr->mutex);
+        pthread_cond_signal(&lr->notif_ecrivain);
     }
 
     pthread_mutex_unlock(&lr->mutex);
