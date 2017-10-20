@@ -21,15 +21,15 @@ void *lecteur(void *args) {
 
     for (i=0; i < d->iterations; i++) {
         dodo(2);
-	debut_lecture(&d->lecteur_redacteur);
-        	printf("Thread %x : debut lecture\n", (int) pthread_self());
-        	valeur = d->donnee;
-        	dodo(1);
-        	printf("Thread %x : ", (int) pthread_self());
-        	if (valeur != d->donnee)
-            		printf("LECTURE INCOHERENTE !!!\n");
-        	else
-            		printf("lecture coherente\n");
+        debut_lecture(&d->lecteur_redacteur);
+        printf("Thread %x : debut lecture\n", (int) pthread_self());
+        valeur = d->donnee;
+        dodo(1);
+        printf("Thread %x : ", (int) pthread_self());
+        if (valeur != d->donnee)
+            printf("LECTURE INCOHERENTE !!!\n");
+        else
+            printf("lecture coherente\n");
         fin_lecture(&d->lecteur_redacteur);
     }
     pthread_exit(0);
@@ -43,15 +43,15 @@ void *redacteur(void *args) {
     for (i=0; i < d->iterations; i++) {
         dodo(2);
         debut_redaction(&d->lecteur_redacteur);
-        	printf("Thread %x : debut redaction......\n", (int) pthread_self());
-        	valeur = random();
-        	d->donnee = valeur;
-        	dodo(1);
-        	printf("Thread %x : ", (int) pthread_self());
-        	if (valeur != d->donnee)
-            		printf("REDACTION INCOHERENTE !!!\n");
-        	else
-            		printf("redaction coherente......\n");
+        printf("Thread %x : debut redaction......\n", (int) pthread_self());
+        valeur = random();
+        d->donnee = valeur;
+        dodo(1);
+        printf("Thread %x : ", (int) pthread_self());
+        if (valeur != d->donnee)
+            printf("REDACTION INCOHERENTE !!!\n");
+        else
+            printf("redaction coherente......\n");
         fin_redaction(&d->lecteur_redacteur);
     }
     pthread_exit(0);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 
     if (argc < 4) {
         fprintf(stderr, "Utilisation: %s nb_lecteurs nb_redacteurs "
-                        "nb_iterations\n", argv[0]);
+                "nb_iterations\n", argv[0]);
         exit(1);
     }
 
