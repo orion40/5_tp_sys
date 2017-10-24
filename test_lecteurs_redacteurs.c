@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include "lecteur_redacteur.h"
 
+//TODO : more doc before copying files
+
 typedef struct {
     lecteur_redacteur_t lecteur_redacteur;
     int iterations;
@@ -59,8 +61,14 @@ void *redacteur(void *args) {
     pthread_exit(0);
 }
 
-
-
+/* main: fonction
+ * La fonction principale du programme.
+ * Elle prend 3 arguments en entré :
+ * int: nombre de lecteurs
+ * int: nombre de rédacteurs
+ * int: nombre de lecture/ecrite réalisé par un thread
+ *
+ */
 int main(int argc, char *argv[]) {
     pthread_t *threads, *thread_courant;
     donnees_thread_t donnees_thread;
@@ -70,7 +78,7 @@ int main(int argc, char *argv[]) {
     if (argc < 4) {
         fprintf(stderr, "Utilisation: %s nb_lecteurs nb_redacteurs "
                 "nb_iterations\n", argv[0]);
-        exit(1);
+        exit(0);
     }
 
     nb_lecteurs = atoi(argv[1]);
