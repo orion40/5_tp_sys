@@ -26,9 +26,10 @@ void *lecteur(void *args) {
         valeur = d->donnee;
         dodo(1);
         printf("Thread %x : ", (int) pthread_self());
-        if (valeur != d->donnee)
+        if (valeur != d->donnee){
             printf("LECTURE INCOHERENTE !!!\n");
-        else
+            exit(1);
+        }else
             printf("lecture coherente\n");
         fin_lecture(&d->lecteur_redacteur);
     }
@@ -48,9 +49,10 @@ void *redacteur(void *args) {
         d->donnee = valeur;
         dodo(1);
         printf("Thread %x : ", (int) pthread_self());
-        if (valeur != d->donnee)
+        if (valeur != d->donnee) {
             printf("REDACTION INCOHERENTE !!!\n");
-        else
+            exit(1);
+        } else
             printf("redaction coherente......\n");
         fin_redaction(&d->lecteur_redacteur);
     }
