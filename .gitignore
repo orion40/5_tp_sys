@@ -1,3 +1,7 @@
+fifo
+lecteurs_first
+redacteurs_first
+
 # Vim swaps files
 *.swp
 
