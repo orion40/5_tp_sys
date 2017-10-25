@@ -7,6 +7,7 @@
  * lr : le lecteur_redacteur_t à initialiser.
  */
 void initialiser_lecteur_redacteur(lecteur_redacteur_t * lr){
+    fprintf(stderr, "Lecteurs en priorité...\n");
     lr->nb_redacteur_actif = 0;
     lr->nb_lecteur_actif = 0;
     lr->nb_lecteur_attente = 0;
