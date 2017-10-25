@@ -2,7 +2,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+
+#ifdef LECTEUR
 #include "lecteur_redacteur.h"
+#elif REDACTEUR
+#include "redacteur_lecteur.h"
+#elif FIFO
+#include "lecteur_redacteur_fifo.h"
+#else
+#include "lecteur_redacteur.h"
+#endif
 
 //TODO : more doc before copying files
 
