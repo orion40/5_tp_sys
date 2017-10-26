@@ -1,6 +1,11 @@
 #include "lecteur_redacteur_fifo.h"
 #include "linked_list.h"
 #include <stdio.h>
+// TODO: idée : dès que quelqu'un veut débuter, on le met dans la pile.
+// Cela veut dire que tant que ce n'est que des lecteurs, on peut les
+// faire tout lire, mais dès qu'on à un rédacteur on bloque,
+// faisons sortir tout les lecteurs, et ensuite le rédacteur à
+// l'accès solo.
 
 /* fonction: initialiser_lecteur_redacteur
  * Permet d'initialiser les structures d'un lecteur_redacteur_t
