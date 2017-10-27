@@ -1,10 +1,9 @@
 #include <pthread.h>
-#include <queue>
+#include <queue.h>
 
 typedef struct {
     int nb_redacteur_actif;
     int nb_lecteur_actif;
-    int nb_lecteur_attente;
     
     pthread_mutex_t mutex;
     pthread_cond_t notif_ecrivain;
@@ -22,6 +21,6 @@ void fin_lecture(lecteur_redacteur_t *);
 void debut_redaction(lecteur_redacteur_t *);
 void fin_redaction(lecteur_redacteur_t *);
 
-void cond_suivant(lecteur_redacteur_t *);
-void cond_attend(lecteur_redacteur_t *);
+void cond_suivant();
+void cond_attend(int);
 
