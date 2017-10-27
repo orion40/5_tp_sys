@@ -14,9 +14,8 @@
  */
 void initialiser_lecteur_redacteur(lecteur_redacteur_t * lr){
     fprintf(stderr, "Priorité FIFO...\n");
-    lr->nb_redacteur_actif = 0;
-    lr->nb_lecteur_actif = 0;
-    lr->nb_lecteur_attente = 0;
+    lr->nb_redacteur = 0;
+    lr->nb_lecteur = 0;
 
     pthread_mutex_init(&lr->mutex, NULL);
     pthread_cond_init(&lr->notif_ecrivain, NULL);
@@ -39,14 +38,16 @@ void detruire_lecteur_redacteur(lecteur_redacteur_t * lr){
  */
 void debut_lecture(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
-    lr->nb_lecteur_attente++;
 
-    while (lr->nb_redacteur_actif > 0){
-        pthread_cond_wait(&lr->notif_lecteur, &lr->mutex);
+    if (! empty(liste_attente)){
+        se_mettre_en_attente(1);
     }
 
-    lr->nb_lecteur_actif++;
-    lr->nb_lecteur_attente--;
+    while (nb_redacteur){
+        se_mettre_en_attente(1);
+    }
+
+    lr->nb_lecteur++;
 
     pthread_mutex_unlock(&lr->mutex);
 }
@@ -58,10 +59,10 @@ void debut_lecture(lecteur_redacteur_t * lr){
 void fin_lecture(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
 
-    lr->nb_lecteur_actif--;
+    nb_lecteur--;
 
-    if (lr->nb_lecteur_actif == 0){
-        pthread_cond_signal(&lr->notif_ecrivain);
+    if (nb_lecteur == 0){
+        passer_la_main();
     }
 
     pthread_mutex_unlock(&lr->mutex);
@@ -74,11 +75,11 @@ void fin_lecture(lecteur_redacteur_t * lr){
 void debut_redaction(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
 
-    while(lr->nb_redacteur_actif > 0 || lr->nb_lecteur_actif > 0){
-        pthread_cond_wait(&lr->notif_ecrivain, &lr->mutex);
+    while(nb_redacteur && nb_lecteur > 0){
+        //pthread_cond_wait(&lr->notif_ecrivain, &lr->mutex);
+        se_mettre_en_attente(0);
     }
-
-    lr->nb_redacteur_actif++;
+    nb_redacteur = 1;
 
     pthread_mutex_unlock(&lr->mutex);
 }
@@ -90,13 +91,9 @@ void debut_redaction(lecteur_redacteur_t * lr){
 void fin_redaction(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
 
-    lr->nb_redacteur_actif--;
+    lr->nb_redacteur = 0;
 
-    if (lr->nb_lecteur_attente > 0){
-        pthread_cond_broadcast(&lr->notif_lecteur);
-    } else {
-        pthread_cond_signal(&lr->notif_ecrivain);
-    }
+    passer_la_main();
 
     pthread_mutex_unlock(&lr->mutex);
 }

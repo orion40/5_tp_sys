@@ -1,5 +1,44 @@
 #include "linked_list.h"
 
+// TODO:
+// Cas ou on passe la main a un rédacteur, on en lit 1
+// Cas ou on passe la main a un lecteur, on lit jusqu'au prochain
+// redacteur ou NULL
+
+struct list_elem {
+ int est_lecteur;
+ pthread_t_cond* signal;
+}
+
+void se_mettre_en_attente (int est_lecteur){
+    last_elem = get_last_elem (liste_attente);
+    struct list_elem* new_element = malloc(sizeof(list_elem));
+    pthread_t_cond* signal = malloc(sizeof(pthread_t_cond));
+    new_element->est_lecteur = est_lecteur;
+    pthread_t_cond_init(new_element, NULL);
+    last_elem->next = new_element;
+    pthread_cond_wait(new_element->signal, global_mutex);
+
+    pthread_cond_destroy(new_element->signal);
+    free(new_element->signal);
+    free(new_element);
+}
+
+// on a fini notre travail
+void passer_la_main (){
+    first_elem = get_first_elem(liste_attente); // LECTURE seulemement, pas POP
+    if (!first_elem->est_lecteur){
+        pthread_cond_signal(first_elem->signal);
+        depiler(liste_attente);
+    } else {
+        while (first_elem->est_lecteur){
+            pthread_cond_signal(first_elem->signal);
+            depiler(liste_attente);
+            first = first_elem->next;
+        }
+    }
+}
+
 void linked_list_init(struct linked_list_head *list) {
     list->head=NULL;
     init(&list->sync);

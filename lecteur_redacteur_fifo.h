@@ -4,9 +4,8 @@
 #include <pthread.h>
 
 typedef struct {
-    int nb_redacteur_actif;
-    int nb_lecteur_actif;
-    int nb_lecteur_attente;
+    int nb_redacteur
+    int nb_lecteur
     pthread_mutex_t mutex;
     pthread_cond_t notif_ecrivain;
     pthread_cond_t notif_lecteur;
