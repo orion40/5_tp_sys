@@ -39,6 +39,12 @@ void passer_la_main (){
     }
 }
 
+bool linked_list_is_empty(struct linked_list_head *list){
+    if (list->head == NULL)
+        return 1;
+    return 0;
+}
+
 void linked_list_init(struct linked_list_head *list) {
     list->head=NULL;
     init(&list->sync);
