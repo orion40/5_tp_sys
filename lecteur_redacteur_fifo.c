@@ -1,11 +1,45 @@
 #include "lecteur_redacteur_fifo.h"
-#include "linked_list.h"
 #include <stdio.h>
-// TODO: idée : dès que quelqu'un veut débuter, on le met dans la pile.
-// Cela veut dire que tant que ce n'est que des lecteurs, on peut les
-// faire tout lire, mais dès qu'on à un rédacteur on bloque,
-// faisons sortir tout les lecteurs, et ensuite le rédacteur à
-// l'accès solo.
+
+// TODO : 
+// se rapeller de ce qu'on a voulu faire
+// faire les fonctions pour la liste
+//
+
+void se_mettre_en_attente (list_elem* liste_attente, int est_lecteur){
+    list_elem* last_elem;
+    last_elem = linked_list_get_last_elem (liste_attente);
+    struct list_elem* new_element = malloc(sizeof(list_elem));
+
+    pthread_cond_t* signal = malloc(sizeof(pthread_cond_t));
+    new_element->est_lecteur = est_lecteur;
+    pthread_cond_init(new_element, NULL);
+    last_elem->next = new_element;
+    pthread_cond_wait(new_element->signal, lr->mutex);
+
+    pthread_cond_destroy(new_element->signal);
+    free(new_element->signal);
+    free(new_element);
+}
+
+void passer_la_main (list_elem* liste_attente){
+    list_elem* first_elem;
+    first_elem = linked_list_get_first_elem(liste_attente); // LECTURE seulemement, pas POP
+    if (!first_elem->est_lecteur){
+        pthread_cond_signal(first_elem->signal);
+        depiler(liste_attente);
+    } else {
+        while (first_elem->est_lecteur){
+            pthread_cond_signal(first_elem->signal);
+            depiler(liste_attente);
+            first = first_elem->next;
+        }
+    }
+}
+
+list_elem* linked_list_depiler (list_elem *list){
+
+}
 
 /* fonction: initialiser_lecteur_redacteur
  * Permet d'initialiser les structures d'un lecteur_redacteur_t
@@ -18,8 +52,7 @@ void initialiser_lecteur_redacteur(lecteur_redacteur_t * lr){
     lr->nb_lecteur = 0;
 
     pthread_mutex_init(&lr->mutex, NULL);
-    pthread_cond_init(&lr->notif_ecrivain, NULL);
-    pthread_cond_init(&lr->notif_lecteur, NULL);
+    pthread_cond_init(&lr->signal, NULL);
 }
 
 /* fonction: detruire_lecteur_redacteur
@@ -28,8 +61,7 @@ void initialiser_lecteur_redacteur(lecteur_redacteur_t * lr){
  */
 void detruire_lecteur_redacteur(lecteur_redacteur_t * lr){
     pthread_mutex_destroy(&lr->mutex);
-    pthread_cond_destroy(&lr->notif_lecteur);
-    pthread_cond_destroy(&lr->notif_ecrivain);
+    pthread_cond_destroy(&lr->signal);
 }
 
 /* fonction: debut_lecture
@@ -39,12 +71,12 @@ void detruire_lecteur_redacteur(lecteur_redacteur_t * lr){
 void debut_lecture(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
 
-    if (! empty(liste_attente)){
-        se_mettre_en_attente(1);
+    if (! linked_list_is_empty(liste_attente)){
+        se_mettre_en_attente(lr->list, 1);
     }
 
-    while (nb_redacteur){
-        se_mettre_en_attente(1);
+    while (lr->nb_redacteur){
+        se_mettre_en_attente(lr->list, 1);
     }
 
     lr->nb_lecteur++;
@@ -59,10 +91,10 @@ void debut_lecture(lecteur_redacteur_t * lr){
 void fin_lecture(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
 
-    nb_lecteur--;
+    lr->nb_lecteur--;
 
-    if (nb_lecteur == 0){
-        passer_la_main();
+    if (lr->nb_lecteur == 0){
+        passer_la_main(lr->list);
     }
 
     pthread_mutex_unlock(&lr->mutex);
@@ -75,11 +107,11 @@ void fin_lecture(lecteur_redacteur_t * lr){
 void debut_redaction(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
 
-    while(nb_redacteur && nb_lecteur > 0){
-        //pthread_cond_wait(&lr->notif_ecrivain, &lr->mutex);
-        se_mettre_en_attente(0);
+    while(lr->nb_redacteur && lr->nb_lecteur > 0){
+        se_mettre_en_attente(lr->list, 0);
     }
-    nb_redacteur = 1;
+
+    lr->nb_redacteur = 1;
 
     pthread_mutex_unlock(&lr->mutex);
 }
@@ -93,7 +125,7 @@ void fin_redaction(lecteur_redacteur_t * lr){
 
     lr->nb_redacteur = 0;
 
-    passer_la_main();
+    passer_la_main(lr->list);
 
     pthread_mutex_unlock(&lr->mutex);
 }
