@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+// Permet l'inclusion à la compilation des entêtes correspondant
+// à la question à laquelle on veut répondre.
 #ifdef LECTEUR
 #include "lecteur_redacteur.h"
 #elif REDACTEUR
@@ -12,8 +14,6 @@
 #else
 #include "lecteur_redacteur.h"
 #endif
-
-//TODO : more doc before copying files
 
 typedef struct {
     lecteur_redacteur_t lecteur_redacteur;
