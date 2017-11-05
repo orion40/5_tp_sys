@@ -1,45 +1,69 @@
 #include "lecteur_redacteur_fifo.h"
 #include <stdio.h>
 
-// TODO : 
+// TODO :
 // se rapeller de ce qu'on a voulu faire
 // faire les fonctions pour la liste
 
+void linked_list_print(struct head_s list_head){
+    int count = 0;
+    list_elem* elem;
+    if (STAILQ_EMPTY(&list_head))
+        fprintf(stderr, "[%s] liste vide !\n", __FUNCTION__);
+    STAILQ_FOREACH(elem, &list_head, next){
+        printf("[%d]: est_lec: %d\n",
+                elem->est_lecteur);
+    }
+}
+
 list_elem* linked_list_get_last_elem(struct head_s list_head){
-    fprintf(stderr, "IMPLEMENT %s", __FUNCTION__);
+    list_elem* elem;
+    if (STAILQ_EMPTY(&list_head))
+        fprintf(stderr, "[%s] liste vide !\n", __FUNCTION__);
+    STAILQ_FOREACH(elem, &list_head, next){
+    }
+    //TODO : est-ce que ça fonctionne ?
+    return elem;
 }
 
 list_elem* linked_list_depiler (struct head_s list_head){
-    fprintf(stderr, "IMPLEMENT %s", __FUNCTION__);
+    list_elem* elem;
+    elem = STAILQ_FIRST(&list_head);
+    STAILQ_REMOVE_HEAD(&list_head, next);
+    return elem;
 }
 
 void se_mettre_en_attente (lecteur_redacteur_t *lr, int est_lecteur){
-    list_elem* last_elem;
-    last_elem = linked_list_get_last_elem(lr->list_head);
+    list_elem* last_elem = linked_list_get_last_elem(lr->list_head);
     list_elem* new_element = (list_elem*) malloc(sizeof(list_elem));
-
-    pthread_cond_t* signal = (pthread_cond_t*) malloc(sizeof(pthread_cond_t));
     new_element->est_lecteur = est_lecteur;
+
     pthread_cond_init(&new_element->signal, NULL);
+    // est-ce qu'il faut mettre la next a null ?
+
     STAILQ_INSERT_TAIL(&lr->list_head, new_element, next);
+
+
     pthread_cond_wait(&new_element->signal, &lr->mutex);
 
     pthread_cond_destroy(&new_element->signal);
-    free(&new_element->signal);
+
     free(new_element);
 }
 
 void passer_la_main (lecteur_redacteur_t *lr){
     list_elem* first_elem;
     first_elem = STAILQ_FIRST(&lr->list_head); // LECTURE seulemement, pas POP
-    if (!STAILQ_FIRST(&lr->list_head)->est_lecteur){
-        pthread_cond_signal(&first_elem->signal);
-        linked_list_depiler(lr->list_head);
-    } else {
-        while (first_elem->est_lecteur){
+    if (first_elem != NULL){
+        if (first_elem->est_lecteur == 0){
             pthread_cond_signal(&first_elem->signal);
             linked_list_depiler(lr->list_head);
-            first_elem = STAILQ_FIRST(&lr->list_head);
+        } else {
+            while (first_elem->est_lecteur){
+                pthread_cond_signal(&first_elem->signal);
+                linked_list_depiler(lr->list_head);
+                first_elem = STAILQ_FIRST(&lr->list_head);
+            }
         }
     }
 }
@@ -53,7 +77,10 @@ void initialiser_lecteur_redacteur(lecteur_redacteur_t * lr){
     fprintf(stderr, "Priorité FIFO...\n");
 
     STAILQ_INIT(&lr->list_head);
+
     pthread_mutex_init(&lr->mutex, NULL);
+    lr->nb_lecteur = 0;
+    lr->nb_redacteur = 0;
 }
 
 /* fonction: detruire_lecteur_redacteur
@@ -79,19 +106,22 @@ void detruire_lecteur_redacteur(lecteur_redacteur_t * lr){
  * lr : le lecteur_redacteur_t à utiliser.
  */
 void debut_lecture(lecteur_redacteur_t * lr){
+    fprintf(stderr, "Entrée %s\n", __FUNCTION__);
+    linked_list_print(lr->list_head);
     pthread_mutex_lock(&lr->mutex);
 
     if (!STAILQ_EMPTY(&lr->list_head)){
         se_mettre_en_attente(lr, 1);
     }
 
-    while (STAILQ_FIRST(&lr->list_head)->nb_redacteur){
+    while (lr->nb_redacteur){
         se_mettre_en_attente(lr, 1);
     }
 
-    STAILQ_FIRST(&lr->list_head)->nb_lecteur++;
+    lr->nb_lecteur++;
 
     pthread_mutex_unlock(&lr->mutex);
+    fprintf(stderr, "Sortie %s\n", __FUNCTION__);
 }
 
 /* fonction: fin_lecture
@@ -101,9 +131,9 @@ void debut_lecture(lecteur_redacteur_t * lr){
 void fin_lecture(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
 
-    STAILQ_FIRST(&lr->list_head)->nb_lecteur--;
+    lr->nb_lecteur--;
 
-    if (STAILQ_FIRST(&lr->list_head)->nb_lecteur == 0){
+    if (lr->nb_lecteur == 0){
         passer_la_main(lr);
     }
 
@@ -117,15 +147,12 @@ void fin_lecture(lecteur_redacteur_t * lr){
 void debut_redaction(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
 
-    // TODO : check if first is NULL
-    if (!STAILQ_EMPTY(&lr->list_head)){
-        while(STAILQ_FIRST(&lr->list_head)->nb_redacteur &&
-                STAILQ_FIRST(&lr->list_head)->nb_lecteur > 0){
-            se_mettre_en_attente(lr, 0);
-        }
+    while(lr->nb_redacteur &&
+            lr->nb_lecteur > 0){
+        se_mettre_en_attente(lr, 0);
     }
 
-    STAILQ_FIRST(&lr->list_head)->nb_redacteur = 1;
+    lr->nb_redacteur = 1;
 
     pthread_mutex_unlock(&lr->mutex);
 }
@@ -137,7 +164,7 @@ void debut_redaction(lecteur_redacteur_t * lr){
 void fin_redaction(lecteur_redacteur_t * lr){
     pthread_mutex_lock(&lr->mutex);
 
-    STAILQ_FIRST(&lr->list_head)->nb_redacteur = 0;
+    lr->nb_redacteur = 0;
 
     passer_la_main(lr);
 

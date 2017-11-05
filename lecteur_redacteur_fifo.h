@@ -12,8 +12,6 @@ struct HEADNAME *headp;
 struct list_elem {
     STAILQ_ENTRY(list_elem) next;
     pthread_cond_t signal;
-    int nb_redacteur;
-    int nb_lecteur;
     int est_lecteur;
 };
 typedef struct list_elem list_elem;
@@ -21,6 +19,8 @@ typedef struct list_elem list_elem;
 typedef struct {
     STAILQ_HEAD(head_s, list_elem) list_head;
     pthread_mutex_t mutex;
+    int nb_redacteur;
+    int nb_lecteur;
 } lecteur_redacteur_t;
 
 void initialiser_lecteur_redacteur(lecteur_redacteur_t *);
